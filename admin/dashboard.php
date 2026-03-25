@@ -2,6 +2,48 @@
 require_once __DIR__ . '/../includes/functions.php';
 requireAdmin();
 
+$messageEmp = null;
+$messageEmpType = 'success';
+
+// --- LÓGICA: AGREGAR NUEVO EMPLEADO ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_employee') {
+    try {
+        $name = trim($_POST['emp_name'] ?? '');
+        $email = trim($_POST['emp_email'] ?? '');
+        $password = $_POST['emp_password'] ?? '';
+
+        if ($name === '' || $email === '' || $password === '') {
+            throw new RuntimeException('Todos los campos son obligatorios para crear el empleado.');
+        }
+
+        // Verificar si el correo ya existe
+        $stmtCheck = db()->prepare("SELECT COUNT(*) FROM employees WHERE email = ?");
+        $stmtCheck->execute([$email]);
+        if ($stmtCheck->fetchColumn() > 0) {
+            throw new RuntimeException('Ese correo ya está registrado en el sistema.');
+        }
+
+        $hashed = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = db()->prepare("INSERT INTO employees (full_name, email, password_hash, created_at) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$name, $email, $hashed, date('Y-m-d H:i:s')]);
+
+        $messageEmp = "Empleado '$name' creado correctamente. Ya puede iniciar sesión.";
+    } catch (Throwable $e) {
+        $messageEmp = $e->getMessage();
+        $messageEmpType = 'error';
+    }
+}
+
+// --- LÓGICA: ELIMINAR EMPLEADO ---
+if (isset($_GET['delete_emp'])) {
+    $id = (int) $_GET['delete_emp'];
+    $stmt = db()->prepare("DELETE FROM employees WHERE id = ?");
+    $stmt->execute([$id]);
+    header('Location: dashboard.php?deleted_emp=1');
+    exit;
+}
+
+// --- LÓGICA: ELIMINAR REGISTRO DE ASISTENCIA ---
 if (isset($_GET['delete'])) {
     $id = (int) $_GET['delete'];
     $stmt = db()->prepare("SELECT photo_path FROM attendance_records WHERE id = ?");
@@ -19,6 +61,7 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
+// Extraer datos para las vistas
 $date = $_GET['date'] ?? utahDate();
 $employee = $_GET['employee'] ?? '';
 $type = $_GET['type'] ?? '';
@@ -26,6 +69,10 @@ $records = getFilteredRecords($date, $employee, $type);
 $employees = getEmployees();
 $summary = getSummaryByEmployee($records);
 
+// Extraer lista de empleados con acceso al sistema
+$dbEmployees = db()->query("SELECT id, full_name, email FROM employees ORDER BY full_name ASC")->fetchAll();
+
+// Estadísticas
 $totalEmployees = count(array_unique(array_column($records, 'full_name')));
 $presentTodayStmt = db()->prepare("SELECT COUNT(DISTINCT full_name) FROM attendance_records WHERE record_date = ? AND record_type = 'entrada'");
 $presentTodayStmt->execute([utahDate()]);
@@ -64,14 +111,75 @@ $avgHours = $durationCount ? round(($totalMinutes / 60) / $durationCount, 1) . '
 </header>
 <div class="container">
     <?php if (!empty($_GET['deleted'])): ?>
-        <div class="alert alert-success">Registro eliminado correctamente.</div>
+        <div class="alert alert-success">Registro de asistencia eliminado correctamente.</div>
+    <?php endif; ?>
+    <?php if (!empty($_GET['deleted_emp'])): ?>
+        <div class="alert alert-success">Acceso de empleado revocado y eliminado.</div>
     <?php endif; ?>
 
     <div class="top-actions" style="margin-bottom:1rem;">
         <div class="hint">Todos los registros están guardados con hora oficial de Utah (<strong><?= e(APP_TIMEZONE) ?></strong>).</div>
         <div class="actions">
             <a class="btn btn-secondary" href="export.php?date=<?= urlencode($date) ?>&employee=<?= urlencode($employee) ?>&type=<?= urlencode($type) ?>">📥 Exportar CSV</a>
-            <a class="btn btn-primary" href="../index.php">👤 Ver formulario público</a>
+            <a class="btn btn-primary" href="../index.php">👤 Ver portal público</a>
+        </div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--primary);">
+        <h2 class="card-title">👥 Gestión de Empleados (Accesos)</h2>
+        <?php if ($messageEmp): ?>
+            <div class="alert alert-<?= $messageEmpType === 'success' ? 'success' : 'error' ?>"><?= e($messageEmp) ?></div>
+        <?php endif; ?>
+        
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 1rem; font-size: 1rem;">Añadir Nuevo Empleado</h3>
+                <form method="post">
+                    <input type="hidden" name="action" value="add_employee">
+                    <div class="form-group">
+                        <label>Nombre completo</label>
+                        <input type="text" name="emp_name" required placeholder="Ej. Carlos Perez">
+                    </div>
+                    <div class="form-group">
+                        <label>Correo electrónico (Usuario)</label>
+                        <input type="email" name="emp_email" required placeholder="correo@camposlawfirm.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="text" name="emp_password" required placeholder="Contraseña segura">
+                    </div>
+                    <button class="btn btn-success btn-block" type="submit">➕ Crear Acceso</button>
+                </form>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 1rem; font-size: 1rem;">Empleados Activos</h3>
+                <div class="table-container" style="max-height: 280px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Correo</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!$dbEmployees): ?>
+                                <tr><td colspan="3" class="text-center">No hay empleados registrados.</td></tr>
+                            <?php else: ?>
+                                <?php foreach ($dbEmployees as $emp): ?>
+                                    <tr>
+                                        <td><strong><?= e($emp['full_name']) ?></strong></td>
+                                        <td class="small"><?= e($emp['email']) ?></td>
+                                        <td>
+                                            <a class="btn btn-danger small" href="?delete_emp=<?= (int)$emp['id'] ?>" onclick="return confirm('¿Seguro que deseas eliminar el acceso de este empleado? Ya no podrá registrar asistencia.')">Borrar</a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -82,7 +190,7 @@ $avgHours = $durationCount ? round(($totalMinutes / 60) / $durationCount, 1) . '
     </div>
 
     <div class="card">
-        <h2 class="card-title">🔍 Filtros</h2>
+        <h2 class="card-title">🔍 Filtros de Asistencia</h2>
         <form method="get" class="filters">
             <div>
                 <label for="date">Fecha</label>
