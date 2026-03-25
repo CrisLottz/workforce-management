@@ -74,6 +74,7 @@ function initializeDatabase(PDO $pdo): void
             ['Scarlett Guerrero', 'sales4@camposlawfirm.com', 'Austin12'],
             ['Veronica Gonzalez', 'sales1@camposlawfirm.com', 'Boston09'],
             ['Xioali Fereira', 'sales2@camposlawfirm.com', 'Denver44'],
+            ['IT Test', 'it_test@camposlawfirm.com', 'Seattle77'],
         ];
 
         $stmtEmp = $pdo->prepare("INSERT INTO employees (full_name, email, password_hash, created_at) VALUES (?, ?, ?, ?)");
