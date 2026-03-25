@@ -1,0 +1,7 @@
+# Ignorar base de datos y fotos
+data/
+uploads/
+
+# Ignorar archivos del sistema operativo
+.DS_Store
+Thumbs.db
