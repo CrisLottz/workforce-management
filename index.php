@@ -86,7 +86,13 @@ $lastRecord = null;
 $currentStatus = 'No registrado';
 $statusClass = '';
 
+// --- NUEVAS VARIABLES DE HORARIO ---
+$scheduleToday = null;
+$lateAlert = false;
+$hasPunchedIn = false;
+
 if (!empty($_SESSION['employee_id'])) {
+    // 1. Obtener el estado actual (Entrada/Salida)
     $stmtUser = db()->prepare("SELECT * FROM attendance_records WHERE record_date = ? AND full_name = ? ORDER BY recorded_at DESC LIMIT 1");
     $stmtUser->execute([$today, $_SESSION['employee_name']]);
     $lastRecord = $stmtUser->fetch();
@@ -94,6 +100,26 @@ if (!empty($_SESSION['employee_id'])) {
     if ($lastRecord) {
         $currentStatus = $lastRecord['record_type'] === 'entrada' ? 'Trabajando' : 'Fuera de oficina';
         $statusClass = $lastRecord['record_type'] === 'entrada' ? 'success' : 'warning';
+    }
+
+    // 2. Revisar si ya registró entrada el día de hoy (para la alerta)
+    $stmtPunch = db()->prepare("SELECT COUNT(*) FROM attendance_records WHERE record_date = ? AND full_name = ? AND record_type = 'entrada'");
+    $stmtPunch->execute([$today, $_SESSION['employee_name']]);
+    $hasPunchedIn = $stmtPunch->fetchColumn() > 0;
+
+    // 3. Obtener el horario agendado para hoy
+    $stmtSched = db()->prepare("SELECT * FROM schedules WHERE employee_name = ? AND schedule_date = ?");
+    $stmtSched->execute([$_SESSION['employee_name'], $today]);
+    $scheduleToday = $stmtSched->fetch();
+
+    // 4. Calcular "Alerta Roja" si está tarde
+    if ($scheduleToday && !$scheduleToday['is_off'] && !empty($scheduleToday['start_time']) && !$hasPunchedIn) {
+        $nowTime = utahNow(); 
+        $startTimeObj = new DateTime($today . ' ' . $scheduleToday['start_time'], new DateTimeZone(APP_TIMEZONE));
+        
+        if ($nowTime > $startTimeObj) {
+            $lateAlert = true;
+        }
     }
 }
 ?>
@@ -153,6 +179,30 @@ if (!empty($_SESSION['employee_id'])) {
         <div class="clock-display">
             <div class="clock-time" id="clock">--:--:--</div>
             <div class="clock-date" id="date">Cargando fecha de Utah...</div>
+        </div>
+
+        <div class="card" style="border: 1px solid #ddd; margin-bottom: 1rem; text-align: center; background: #fdfdfd; border-left: 4px solid var(--primary);">
+            <h3 style="margin-top:0; font-size: 1.1rem; color: #555;">📅 Mi Horario (Hoy)</h3>
+            
+            <?php if (!$scheduleToday): ?>
+                <p style="color: gray; margin: 0;">No tienes un horario asignado para hoy.</p>
+            <?php elseif ($scheduleToday['is_off']): ?>
+                <p style="color: var(--primary); font-weight: bold; margin: 0; font-size: 1.2rem;">DÍA OFF</p>
+            <?php else: ?>
+                <?php 
+                    $start12h = date("g:i A", strtotime($scheduleToday['start_time']));
+                    $end12h = date("g:i A", strtotime($scheduleToday['end_time']));
+                ?>
+                <p style="font-size: 1.3rem; font-weight: bold; margin: 5px 0;">
+                    <?= e($start12h) ?> - <?= e($end12h) ?>
+                </p>
+                
+                <?php if ($lateAlert): ?>
+                    <div style="background-color: #fee2e2; color: #b91c1c; padding: 8px; border-radius: 4px; font-weight: bold; margin-top: 10px; border: 1px solid #f87171;">
+                        ⚠️ NO HAZ REGISTRADO ENTRADA Y YA PASÓ TU HORA.
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
         </div>
 
         <div class="status-grid">
