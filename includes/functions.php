@@ -19,19 +19,19 @@ function requireAdmin(): void
     }
 }
 
-function utahNow(): DateTime
+function appNow(): DateTime
 {
     return new DateTime('now', new DateTimeZone(APP_TIMEZONE));
 }
 
-function utahDate(): string
+function appDate(): string
 {
-    return utahNow()->format('Y-m-d');
+    return appNow()->format('Y-m-d');
 }
 
-function utahTime(): string
+function appTime(): string
 {
-    return utahNow()->format('H:i:s');
+    return appNow()->format('H:i:s');
 }
 
 function saveUploadedPhoto(array $file): string

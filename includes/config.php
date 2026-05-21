@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 define('APP_NAME', 'TimeTrack Pro PHP');
-define('APP_TIMEZONE', 'America/Denver'); // Utah
+define('APP_TIMEZONE', 'America/Denver'); // Change this to your local timezone
 
 define('BASE_PATH', dirname(__DIR__));
 define('DATA_PATH', BASE_PATH . '/data');

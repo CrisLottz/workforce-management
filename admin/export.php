@@ -10,7 +10,7 @@ $records = getFilteredRecords($date, $employee, $type);
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename=attendance_export_' . date('Ymd_His') . '.csv');
 
-echo "Nombre,Tipo,Fecha,Hora Utah,Latitud,Longitud,Exactitud,Zona Horaria\n";
+echo "Nombre,Tipo,Fecha,Hora,Latitud,Longitud,Exactitud,Zona Horaria\n";
 foreach ($records as $record) {
     $row = [
         $record['full_name'],

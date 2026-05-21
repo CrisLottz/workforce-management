@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post">
             <div class="form-group">
                 <label>Correo Electrónico</label>
-                <input type="email" name="email" required placeholder="schedulerutah@camposlawfirm.com">
+                <input type="email" name="email" required placeholder="scheduler@example.com">
             </div>
             <div class="form-group">
                 <label>Contraseña</label>

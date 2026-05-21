@@ -49,7 +49,7 @@
 <body class="login-bg">
     <div class="container" style="max-width: 900px; margin-top: 40px;">
         <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #333; font-size: 2rem;">⚖️ Campos Law Firm</h1>
+            <h1 style="color: #333; font-size: 2rem;">🏢 Workforce Management</h1>
             <p style="color: #666; font-size: 1.1rem;">Sistema de Control de Asistencia y Horarios</p>
             <h2 style="margin-top: 30px; color: var(--primary);">Selecciona tu perfil de acceso</h2>
         </div>

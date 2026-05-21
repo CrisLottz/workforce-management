@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 latitude, longitude, accuracy, photo_path, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-            $now = utahNow();
+            $now = appNow();
             $stmt->execute([
                 $fullName,
                 $recordType,
@@ -67,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             $message = $recordType === 'entrada'
-                ? 'Entrada registrada correctamente con hora de Utah.'
-                : 'Salida registrada correctamente con hora de Utah.';
+                ? 'Entrada registrada correctamente.'
+                : 'Salida registrada correctamente.';
         } catch (Throwable $e) {
             $message = $e->getMessage();
             $messageType = 'error';
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$today = utahDate();
+$today = appDate();
 $stmt = db()->prepare("SELECT * FROM attendance_records WHERE record_date = ? ORDER BY recorded_at DESC");
 $stmt->execute([$today]);
 $todayRecords = $stmt->fetchAll();
@@ -114,7 +114,7 @@ if (!empty($_SESSION['employee_id'])) {
 
     // 4. Calcular "Alerta Roja" si está tarde
     if ($scheduleToday && !$scheduleToday['is_off'] && !empty($scheduleToday['start_time']) && !$hasPunchedIn) {
-        $nowTime = utahNow(); 
+        $nowTime = appNow(); 
         $startTimeObj = new DateTime($today . ' ' . $scheduleToday['start_time'], new DateTimeZone(APP_TIMEZONE));
         
         if ($nowTime > $startTimeObj) {
@@ -156,7 +156,7 @@ if (!empty($_SESSION['employee_id'])) {
                     <input type="hidden" name="action" value="login">
                     <div class="form-group">
                         <label for="email">Correo electrónico</label>
-                        <input type="email" name="email" id="email" required placeholder="ejemplo@camposlawfirm.com">
+                        <input type="email" name="email" id="email" required placeholder="user@example.com">
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña</label>
@@ -178,7 +178,7 @@ if (!empty($_SESSION['employee_id'])) {
 
         <div class="clock-display">
             <div class="clock-time" id="clock">--:--:--</div>
-            <div class="clock-date" id="date">Cargando fecha de Utah...</div>
+            <div class="clock-date" id="date">Cargando fecha...</div>
         </div>
 
         <div class="card" style="border: 1px solid #ddd; margin-bottom: 1rem; text-align: center; background: #fdfdfd; border-left: 4px solid var(--primary);">
@@ -251,7 +251,7 @@ if (!empty($_SESSION['employee_id'])) {
                         <tr>
                             <th>Empleado</th>
                             <th>Tipo</th>
-                            <th>Hora Utah</th>
+                            <th>Hora</th>
                             <th>Ubicación</th>
                             <th>Foto</th>
                         </tr>
@@ -280,16 +280,16 @@ if (!empty($_SESSION['employee_id'])) {
     <?php endif; ?>
 </div>
 <script>
-const utahFormatterTime = new Intl.DateTimeFormat('es-ES', {timeZone: 'America/Denver', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
-const utahFormatterDate = new Intl.DateTimeFormat('es-ES', {timeZone: 'America/Denver', weekday:'long', year:'numeric', month:'long', day:'numeric'});
+const appFormatterTime = new Intl.DateTimeFormat('es-ES', {timeZone: 'America/Denver', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+const appFormatterDate = new Intl.DateTimeFormat('es-ES', {timeZone: 'America/Denver', weekday:'long', year:'numeric', month:'long', day:'numeric'});
 function updateClock(){
     let clockEl = document.getElementById('clock');
     let dateEl = document.getElementById('date');
     if(!clockEl || !dateEl) return;
     
     const now = new Date();
-    clockEl.textContent = utahFormatterTime.format(now);
-    dateEl.textContent = utahFormatterDate.format(now) + ' · Hora de Utah';
+    clockEl.textContent = appFormatterTime.format(now);
+    dateEl.textContent = appFormatterDate.format(now);
 }
 setInterval(updateClock, 1000); updateClock();
 

@@ -62,7 +62,7 @@ if (isset($_GET['delete'])) {
 }
 
 // Extraer datos para las vistas
-$date = $_GET['date'] ?? utahDate();
+$date = $_GET['date'] ?? appDate();
 $employee = $_GET['employee'] ?? '';
 $type = $_GET['type'] ?? '';
 $records = getFilteredRecords($date, $employee, $type);
@@ -75,7 +75,7 @@ $dbEmployees = db()->query("SELECT id, full_name, email FROM employees ORDER BY 
 // Estadísticas
 $totalEmployees = count(array_unique(array_column($records, 'full_name')));
 $presentTodayStmt = db()->prepare("SELECT COUNT(DISTINCT full_name) FROM attendance_records WHERE record_date = ? AND record_type = 'entrada'");
-$presentTodayStmt->execute([utahDate()]);
+$presentTodayStmt->execute([appDate()]);
 $presentToday = (int) $presentTodayStmt->fetchColumn();
 
 $totalMinutes = 0;
@@ -118,7 +118,7 @@ $avgHours = $durationCount ? round(($totalMinutes / 60) / $durationCount, 1) . '
     <?php endif; ?>
 
     <div class="top-actions" style="margin-bottom:1rem;">
-        <div class="hint">Todos los registros están guardados con hora oficial de Utah (<strong><?= e(APP_TIMEZONE) ?></strong>).</div>
+        <div class="hint">Todos los registros están guardados con la zona horaria configurada (<strong><?= e(APP_TIMEZONE) ?></strong>).</div>
         <div class="actions">
             <a class="btn btn-secondary" href="export.php?date=<?= urlencode($date) ?>&employee=<?= urlencode($employee) ?>&type=<?= urlencode($type) ?>">📥 Exportar CSV</a>
             <a class="btn btn-primary" href="../index.php">👤 Ver portal público</a>
@@ -142,7 +142,7 @@ $avgHours = $durationCount ? round(($totalMinutes / 60) / $durationCount, 1) . '
                     </div>
                     <div class="form-group">
                         <label>Correo electrónico (Usuario)</label>
-                        <input type="email" name="emp_email" required placeholder="correo@camposlawfirm.com">
+                        <input type="email" name="emp_email" required placeholder="user@example.com">
                     </div>
                     <div class="form-group">
                         <label>Contraseña</label>
@@ -250,7 +250,7 @@ $avgHours = $durationCount ? round(($totalMinutes / 60) / $durationCount, 1) . '
                     <th>Empleado</th>
                     <th>Tipo</th>
                     <th>Fecha</th>
-                    <th>Hora Utah</th>
+                    <th>Hora</th>
                     <th>Ubicación</th>
                     <th>Foto</th>
                     <th>Acciones</th>

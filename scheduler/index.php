@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // Filtros de navegación
-$selectedDate = $_GET['week_date'] ?? utahDate();
+$selectedDate = $_GET['week_date'] ?? appDate();
 $selectedEmp = $_GET['employee_name'] ?? '';
 
 // Calcular el Domingo de la semana seleccionada

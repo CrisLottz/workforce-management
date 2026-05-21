@@ -61,20 +61,14 @@ function initializeDatabase(PDO $pdo): void
         ]);
     }
 
-    // 5. NUEVA: Sembrar equipo de ventas por defecto con contraseñas únicas
+    // 5. Seed default test employees
     $countEmp = (int) $pdo->query("SELECT COUNT(*) FROM employees")->fetchColumn();
     if ($countEmp === 0) {
         $now = date('Y-m-d H:i:s');
         
         $employees = [
-            ['Alejandra Rodriguez', 'sales3@camposlawfirm.com', 'Miami24'],
-            ['Alyss Aldana', 'sales5@camposlawfirm.com', 'Vegas88'],
-            ['Johsibel Leal', 'sales7@camposlawfirm.com', 'Reno77'],
-            ['Nerwin Gonzalez', 'sales6@camposlawfirm.com', 'Dallas55'],
-            ['Scarlett Guerrero', 'sales4@camposlawfirm.com', 'Austin12'],
-            ['Veronica Gonzalez', 'sales1@camposlawfirm.com', 'Boston09'],
-            ['Xioali Fereira', 'sales2@camposlawfirm.com', 'Denver44'],
-            ['IT Test', 'it_test@camposlawfirm.com', 'Seattle77'],
+            ['John Doe', 'john@example.com', 'password123'],
+            ['Jane Doe', 'jane@example.com', 'password123'],
         ];
 
         $stmtEmp = $pdo->prepare("INSERT INTO employees (full_name, email, password_hash, created_at) VALUES (?, ?, ?, ?)");
