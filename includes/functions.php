@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/lang.php';
 
 function e(?string $value): string
 {
@@ -37,15 +38,15 @@ function appTime(): string
 function saveUploadedPhoto(array $file): string
 {
     if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
-        throw new RuntimeException('Debe subir una fotografía válida.');
+        throw new RuntimeException(t('photo_required'));
     }
 
     if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-        throw new RuntimeException('Hubo un problema al subir la fotografía.');
+        throw new RuntimeException(t('photo_upload_error'));
     }
 
     if (($file['size'] ?? 0) > 5 * 1024 * 1024) {
-        throw new RuntimeException('La fotografía supera el límite de 5 MB.');
+        throw new RuntimeException(t('photo_size_limit'));
     }
 
     $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -58,14 +59,14 @@ function saveUploadedPhoto(array $file): string
     ];
 
     if (!isset($allowed[$mime])) {
-        throw new RuntimeException('Solo se permiten imágenes JPG, PNG o WEBP.');
+        throw new RuntimeException(t('photo_format'));
     }
 
     $filename = 'photo_' . date('Ymd_His') . '_' . bin2hex(random_bytes(6)) . '.' . $allowed[$mime];
     $destination = UPLOAD_PATH . '/' . $filename;
 
     if (!move_uploaded_file($file['tmp_name'], $destination)) {
-        throw new RuntimeException('No se pudo guardar la fotografía.');
+        throw new RuntimeException(t('photo_save_error'));
     }
 
     return 'uploads/' . $filename;

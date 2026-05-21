@@ -2,7 +2,11 @@
 
 An open-source, self-hosted employee attendance tracking system built with PHP and SQLite. Track clock-in/clock-out with photo evidence and GPS geolocation, manage weekly schedules, and export reports — all without external dependencies or API integrations.
 
-Ready to deploy on any PHP hosting (shared hosting, VPS, cPanel, XAMPP, Laragon, etc.).
+Now with **multi-language support** (English and Spanish) via a lightweight i18n system!
+
+*See below for the Spanish version. / Ver abajo para la versión en español.*
+
+---
 
 ## ✨ Features
 
@@ -30,6 +34,12 @@ Ready to deploy on any PHP hosting (shared hosting, VPS, cPanel, XAMPP, Laragon,
 - **Record deletion** — admins can delete individual records (associated photo is also removed from the server).
 - **CSV export** — download filtered attendance records as a CSV file.
 
+### 🌍 Internationalization (i18n)
+- **Automatic Language Detection** — Detects user browser preference (`Accept-Language`).
+- **Language Switcher** — Easily toggle between English and Spanish on any page.
+- **State Persistence** — Selected language is remembered via PHP Sessions.
+- **Extensible Dictionary** — Add new languages by editing `includes/lang.php`.
+
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
@@ -41,31 +51,6 @@ Ready to deploy on any PHP hosting (shared hosting, VPS, cPanel, XAMPP, Laragon,
 
 > **Zero external dependencies.** No frameworks, no Composer packages, no third-party APIs. Just PHP + SQLite.
 
-## 📁 Project Structure
-
-```
-workforce-management/
-├── index.php                  # Landing portal — role selector (Employee / Scheduler / Admin)
-├── empleado.php               # Employee panel: login, clock in/out, schedule view, today's records
-├── assets/
-│   └── style.css              # Global stylesheet (responsive design)
-├── includes/
-│   ├── config.php             # App constants: timezone, paths. Auto-creates data/ and uploads/
-│   ├── db.php                 # PDO/SQLite connection, schema initialization, seed data
-│   └── functions.php          # Helpers: HTML escaping, auth guards, photo upload, query builders
-├── admin/
-│   ├── login.php              # Admin login
-│   ├── dashboard.php          # Admin dashboard: stats, employee CRUD, filters, records
-│   ├── export.php             # CSV export of filtered attendance records
-│   └── logout.php             # Admin session teardown
-├── scheduler/
-│   ├── login.php              # Scheduler login (uses scheduler_users table)
-│   ├── index.php              # Scheduler panel: weekly schedule assignment per employee
-│   └── logout.php             # Scheduler session teardown
-├── data/                      # (auto-generated, gitignored) SQLite database
-└── uploads/                   # (auto-generated, gitignored) Photo evidence files
-```
-
 ## 🗄️ Database Schema
 
 The SQLite database is auto-generated at `data/attendance.sqlite` on first access. The schema is initialized from `includes/db.php`:
@@ -75,7 +60,7 @@ The SQLite database is auto-generated at `data/attendance.sqlite` on first acces
 | `admin_users` | Admin credentials (username + bcrypt hash) |
 | `employees` | Employee accounts (full name, email, bcrypt hash) |
 | `attendance_records` | Clock-in/out log (name, type, date, time, GPS coords, photo path) |
-| `schedules`* | Weekly schedules assigned by the scheduler (employee, date, start/end time, is_off) |
+| `schedules`* | Weekly schedules assigned by the scheduler |
 | `scheduler_users`* | Scheduler role credentials (email + bcrypt hash) |
 
 > \* The `schedules` and `scheduler_users` tables are used by the Scheduler module but **are not auto-created** by `db.php`. See the installation section below for the SQL to create them.
@@ -108,7 +93,6 @@ The SQLite database is auto-generated at `data/attendance.sqlite` on first acces
    ```php
    define('APP_TIMEZONE', 'America/New_York'); // Change to your timezone
    ```
-   See the full list of [supported timezones](https://www.php.net/manual/en/timezones.php).
 
 5. **(Optional) Set up the Scheduler module.** If you want to use the schedule planner, create the required tables by running this SQL against your SQLite database:
    ```sql
@@ -150,48 +134,81 @@ On first launch, the system automatically seeds the following test accounts:
 
 > ⚠️ **Change all default passwords** before using in production. You can modify the seed data in `includes/db.php` → `initializeDatabase()`, or manage employees directly from the Admin panel.
 
-## 🔧 Configuration
+---
 
-All configuration lives in [`includes/config.php`](includes/config.php):
+# 🏢 Gestión de Personal (Español)
 
-| Constant | Default | Description |
-|----------|---------|-------------|
-| `APP_NAME` | `TimeTrack Pro PHP` | Application display name |
-| `APP_TIMEZONE` | `America/Denver` | Timezone for all timestamps |
-| `DATA_PATH` | `<project>/data` | SQLite database directory |
-| `UPLOAD_PATH` | `<project>/uploads` | Photo evidence directory |
-| `DB_PATH` | `<DATA_PATH>/attendance.sqlite` | Full path to the database file |
+Un sistema de control de asistencia de empleados de código abierto, autoalojado, creado con PHP y SQLite. Registra las entradas/salidas con evidencia fotográfica y geolocalización GPS, gestiona los horarios semanales y exporta informes, todo sin dependencias externas ni integraciones de API.
 
-## 🌐 User Flow
+¡Ahora con **soporte multilingüe** (Inglés y Español) mediante un sistema i18n ligero!
 
-```
-┌──────────────────────────────────────────────────┐
-│              index.php (Landing Portal)          │
-│   ┌──────────┐  ┌───────────┐  ┌──────────────┐ │
-│   │ Employee │  │ Scheduler │  │ Admin        │ │
-│   └────┬─────┘  └─────┬─────┘  └──────┬───────┘ │
-└────────┼──────────────┼───────────────┼──────────┘
-         ▼              ▼               ▼
-   empleado.php   scheduler/       admin/
-   ┌───────────┐  ┌────────────┐  ┌──────────────┐
-   │ Login     │  │ Login      │  │ Login        │
-   │ Clock     │  │ Select     │  │ Dashboard    │
-   │ In / Out  │  │ week &     │  │ Stats &      │
-   │ Schedule  │  │ employee   │  │ Employee     │
-   │ view      │  │ Assign     │  │ CRUD         │
-   │ Today's   │  │ shifts &   │  │ Filters &    │
-   │ records   │  │ days off   │  │ CSV Export   │
-   └───────────┘  └────────────┘  └──────────────┘
-```
+## ✨ Características
 
-## 🤝 Contributing
+### 👤 Panel de Empleados
+- **Entrada / Salida** con evidencia fotográfica obligatoria (JPG, PNG, WEBP — máx 5 MB).
+- **Captura automática de GPS** (latitud, longitud, exactitud) a través del navegador.
+- **Zona horaria configurable** — todos los registros forzados a una zona horaria definida en `config.php`.
+- **Vista del horario de hoy** — el empleado ve su turno asignado o "DÍA OFF".
+- **Alerta de retraso** — advertencia en rojo si la hora de entrada ya pasó.
+- **Reloj en vivo** — un reloj digital en tiempo real con la zona horaria configurada.
+- **Registros de hoy** — tabla con todos los registros de la organización en el día actual.
 
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m 'Add my feature'`
-4. Push to the branch: `git push origin feature/my-feature`
-5. Open a Pull Request.
+### 📅 Panel Planificador (Scheduler)
+- **Asignación de horarios semanales** — selecciona empleado y semana, luego define hora de entrada/salida para cada día.
+- **Día OFF** — marca cualquier día como libre (los campos de hora se desactivan automáticamente).
+- **Navegación por semana** — salta a cualquier semana seleccionando una fecha.
+- **Lógica Upsert** — usa `REPLACE INTO` para crear o actualizar horarios sin duplicados.
 
-## 📝 License
+### ⚙️ Panel Administrador
+- **Estadísticas del panel** — total de empleados, presentes hoy, promedio de horas.
+- **Gestión de empleados** — crear accesos (nombre, email, contraseña) y borrar existentes.
+- **Filtros de asistencia** — por fecha, nombre del empleado y tipo (entrada/salida).
+- **Tarjetas de resumen diario** — por empleado: hora de entrada, salida y duración.
+- **Registros detallados** — log completo con nombre, tipo, fecha, hora, GPS (link de Google Maps) y foto.
+- **Eliminación de registros** — admins pueden borrar un registro (elimina también la foto del servidor).
+- **Exportación CSV** — descarga los registros filtrados en formato CSV.
 
-This project is open source and available under the [MIT License](LICENSE).
+### 🌍 Internacionalización (i18n)
+- **Detección automática** — Detecta la preferencia del navegador (`Accept-Language`).
+- **Selector de idioma** — Alterna fácilmente entre Inglés y Español en cualquier página.
+- **Persistencia de sesión** — El idioma seleccionado se recuerda mediante sesiones de PHP.
+- **Diccionario extensible** — Añade nuevos idiomas editando `includes/lang.php`.
+
+## 🛠️ Stack Tecnológico
+
+| Capa | Tecnología |
+|-------|-----------|
+| **Backend** | PHP 7.4+ |
+| **Base de Datos** | SQLite 3 (archivo local autogenerado) |
+| **Frontend** | HTML5, CSS3 (responsivo), Vanilla JavaScript |
+| **Autenticación** | PHP Sessions + `password_hash` / `password_verify` (bcrypt) |
+
+## ⚙️ Instalación
+
+### Requisitos Previos
+- PHP 7.4+ con `pdo_sqlite` y `fileinfo` habilitados.
+- Servidor web (Apache, Nginx) o entorno local (XAMPP, Laragon, etc.).
+
+### Pasos
+1. **Clona el repositorio** o descárgalo en tu carpeta pública (ej. `htdocs/`).
+2. **Otorga permisos de escritura** a la carpeta principal (el sistema creará las carpetas `data/` y `uploads/` automáticamente).
+3. **Configura la zona horaria** en `includes/config.php` (ej. `America/Mexico_City`).
+4. (Opcional) Ejecuta las sentencias SQL (ver la versión en inglés) si deseas utilizar el módulo de horarios semanales (*Scheduler*).
+5. Abre la aplicación en tu navegador. 
+
+## 🔐 Credenciales por Defecto (Pruebas)
+
+Al iniciar por primera vez, el sistema genera automáticamente usuarios de prueba:
+
+### Administrador
+| Usuario | Contraseña |
+|----------|----------|
+| `admin` | `Admin123*` |
+
+### Empleados
+| Nombre | Correo | Contraseña |
+|------|-------|----------|
+| John Doe | `john@example.com` | `password123` |
+| Jane Doe | `jane@example.com` | `password123` |
+
+> ⚠️ **Cambia todas las contraseñas** antes de utilizar en producción.

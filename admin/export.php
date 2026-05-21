@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/lang.php';
 requireAdmin();
 
 $date = $_GET['date'] ?? '';
@@ -10,7 +11,17 @@ $records = getFilteredRecords($date, $employee, $type);
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename=attendance_export_' . date('Ymd_His') . '.csv');
 
-echo "Nombre,Tipo,Fecha,Hora,Latitud,Longitud,Exactitud,Zona Horaria\n";
+$headerRow = [
+    t('csv_name'),
+    t('csv_type'),
+    t('csv_date'),
+    t('csv_time'),
+    t('csv_latitude'),
+    t('csv_longitude'),
+    t('csv_accuracy'),
+    t('csv_timezone'),
+];
+echo implode(',', array_map(function($val) { return '"' . str_replace('"', '""', $val) . '"'; }, $headerRow)) . "\n";
 foreach ($records as $record) {
     $row = [
         $record['full_name'],

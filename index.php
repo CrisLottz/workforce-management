@@ -1,9 +1,10 @@
+<?php require_once __DIR__ . '/includes/lang.php'; ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?= currentLang() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Accesos | Control de Asistencia</title>
+    <title><?= t('portal_title') ?></title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
         .role-cards { 
@@ -47,33 +48,36 @@
     </style>
 </head>
 <body class="login-bg">
+    <div style="position: absolute; top: 15px; right: 20px;">
+        <?= langSwitcher('light') ?>
+    </div>
     <div class="container" style="max-width: 900px; margin-top: 40px;">
         <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #333; font-size: 2rem;">🏢 Workforce Management</h1>
-            <p style="color: #666; font-size: 1.1rem;">Sistema de Control de Asistencia y Horarios</p>
-            <h2 style="margin-top: 30px; color: var(--primary);">Selecciona tu perfil de acceso</h2>
+            <h1 style="color: #333; font-size: 2rem;">🏢 <?= t('app_name') ?></h1>
+            <p style="color: #666; font-size: 1.1rem;"><?= t('portal_subtitle') ?></p>
+            <h2 style="margin-top: 30px; color: var(--primary);"><?= t('select_role') ?></h2>
         </div>
         
         <div class="role-cards">
             <a href="empleado.php" class="role-card">
                 <div class="role-icon">🧑‍💻</div>
-                <div class="role-title">Empleado</div>
-                <div class="role-desc">Registra tus entradas, salidas y visualiza tu horario asignado del día.</div>
-                <span class="btn btn-primary btn-block">Ingresar como Empleado</span>
+                <div class="role-title"><?= t('role_employee') ?></div>
+                <div class="role-desc"><?= t('role_employee_desc') ?></div>
+                <span class="btn btn-primary btn-block"><?= t('enter_as_employee') ?></span>
             </a>
             
             <a href="scheduler/login.php" class="role-card">
                 <div class="role-icon">📅</div>
-                <div class="role-title">Planificador</div>
-                <div class="role-desc">Gestiona los horarios semanales y asigna los días libres del equipo.</div>
-                <span class="btn btn-success btn-block" style="background-color: #10b981;">Ingresar como Planificador</span>
+                <div class="role-title"><?= t('role_scheduler') ?></div>
+                <div class="role-desc"><?= t('role_scheduler_desc') ?></div>
+                <span class="btn btn-success btn-block" style="background-color: #10b981;"><?= t('enter_as_scheduler') ?></span>
             </a>
             
             <a href="admin/login.php" class="role-card">
                 <div class="role-icon">⚙️</div>
-                <div class="role-title">Administrador</div>
-                <div class="role-desc">Gestiona usuarios, audita las asistencias y exporta reportes en CSV.</div>
-                <span class="btn btn-secondary btn-block">Ingresar como Administrador</span>
+                <div class="role-title"><?= t('role_admin') ?></div>
+                <div class="role-desc"><?= t('role_admin_desc') ?></div>
+                <span class="btn btn-secondary btn-block"><?= t('enter_as_admin') ?></span>
             </a>
         </div>
     </div>

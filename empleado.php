@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/lang.php';
 
 $message = null;
 $messageType = 'success';
@@ -27,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: empleado.php');
             exit;
         } else {
-            $message = 'Credenciales inválidas.';
+            $message = t('invalid_credentials');
             $messageType = 'error';
         }
     } 
@@ -41,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $accuracy = trim($_POST['accuracy'] ?? '');
 
             if (!in_array($recordType, ['entrada', 'salida'], true)) {
-                throw new RuntimeException('Tipo de registro inválido.');
+                throw new RuntimeException(t('invalid_record_type'));
             }
 
             $photoPath = saveUploadedPhoto($_FILES['photo'] ?? []);
@@ -67,8 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             $message = $recordType === 'entrada'
-                ? 'Entrada registrada correctamente.'
-                : 'Salida registrada correctamente.';
+                ? t('clock_in_success')
+                : t('clock_out_success');
         } catch (Throwable $e) {
             $message = $e->getMessage();
             $messageType = 'error';
@@ -83,7 +84,7 @@ $todayRecords = $stmt->fetchAll();
 
 // Determinar el último registro exclusivamente del usuario logueado
 $lastRecord = null;
-$currentStatus = 'No registrado';
+$currentStatus = t('not_registered');
 $statusClass = '';
 
 // --- NUEVAS VARIABLES DE HORARIO ---
@@ -98,7 +99,7 @@ if (!empty($_SESSION['employee_id'])) {
     $lastRecord = $stmtUser->fetch();
 
     if ($lastRecord) {
-        $currentStatus = $lastRecord['record_type'] === 'entrada' ? 'Trabajando' : 'Fuera de oficina';
+        $currentStatus = $lastRecord['record_type'] === 'entrada' ? t('working') : t('out_of_office');
         $statusClass = $lastRecord['record_type'] === 'entrada' ? 'success' : 'warning';
     }
 
@@ -124,18 +125,21 @@ if (!empty($_SESSION['employee_id'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?= currentLang() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= e(APP_NAME) ?></title>
+    <title><?= e(t('app_name')) ?></title>
     <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 <header>
     <div class="header-content">
-        <div class="logo"><span>⏱️</span><span><?= e(APP_NAME) ?></span></div>
-        <div class="role-badge">Modo Empleado</div>
+        <div class="logo"><span>⏱️</span><span><?= e(t('app_name')) ?></span></div>
+        <div style="display:flex; gap:15px; align-items:center;">
+            <div class="role-badge"><?= t('employee_mode') ?></div>
+            <?= langSwitcher() ?>
+        </div>
     </div>
 </header>
 <div class="container">
@@ -145,49 +149,49 @@ if (!empty($_SESSION['employee_id'])) {
 
     <?php if (empty($_SESSION['employee_id'])): ?>
         <div class="top-actions" style="margin-bottom:1rem;">
-            <div class="hint">Identifícate para registrar tu asistencia.</div>
-            <a class="btn btn-primary" href="admin/login.php">🔐 Ir al panel administrador</a>
+            <div class="hint"><?= t('identify_hint') ?></div>
+            <a class="btn btn-primary" href="admin/login.php"><?= t('go_admin_panel') ?></a>
         </div>
 
         <div class="auth-container">
             <div class="card">
-                <h2 class="card-title">Acceso de Empleados</h2>
+                <h2 class="card-title"><?= t('employee_access') ?></h2>
                 <form method="post">
                     <input type="hidden" name="action" value="login">
                     <div class="form-group">
-                        <label for="email">Correo electrónico</label>
+                        <label for="email"><?= t('email') ?></label>
                         <input type="email" name="email" id="email" required placeholder="user@example.com">
                     </div>
                     <div class="form-group">
-                        <label for="password">Contraseña</label>
+                        <label for="password"><?= t('password') ?></label>
                         <input type="password" name="password" id="password" required>
                     </div>
-                    <button class="btn btn-primary btn-block" type="submit">Iniciar Sesión</button>
+                    <button class="btn btn-primary btn-block" type="submit"><?= t('login') ?></button>
                 </form>
             </div>
         </div>
 
     <?php else: ?>
         <div class="top-actions" style="margin-bottom:1rem;">
-            <div class="hint">Sesión iniciada como: <strong><?= e($_SESSION['employee_name']) ?></strong> | Hora obligatoria: <strong><?= e(APP_TIMEZONE) ?></strong></div>
+            <div class="hint"><?= t('logged_in_as') ?> <strong><?= e($_SESSION['employee_name']) ?></strong> | <?= t('mandatory_timezone') ?> <strong><?= e(APP_TIMEZONE) ?></strong></div>
             <div class="actions">
-                <a class="btn btn-secondary" href="?logout=1">Cerrar Sesión</a>
-                <a class="btn btn-primary" href="admin/login.php">🔐 Panel admin</a>
+                <a class="btn btn-secondary" href="?logout=1"><?= t('logout') ?></a>
+                <a class="btn btn-primary" href="admin/login.php"><?= t('admin_panel_link') ?></a>
             </div>
         </div>
 
         <div class="clock-display">
             <div class="clock-time" id="clock">--:--:--</div>
-            <div class="clock-date" id="date">Cargando fecha...</div>
+            <div class="clock-date" id="date"><?= t('loading_date') ?></div>
         </div>
 
         <div class="card" style="border: 1px solid #ddd; margin-bottom: 1rem; text-align: center; background: #fdfdfd; border-left: 4px solid var(--primary);">
-            <h3 style="margin-top:0; font-size: 1.1rem; color: #555;">📅 Mi Horario (Hoy)</h3>
+            <h3 style="margin-top:0; font-size: 1.1rem; color: #555;"><?= t('my_schedule_today') ?></h3>
             
             <?php if (!$scheduleToday): ?>
-                <p style="color: gray; margin: 0;">No tienes un horario asignado para hoy.</p>
+                <p style="color: gray; margin: 0;"><?= t('no_schedule_today') ?></p>
             <?php elseif ($scheduleToday['is_off']): ?>
-                <p style="color: var(--primary); font-weight: bold; margin: 0; font-size: 1.2rem;">DÍA OFF</p>
+                <p style="color: var(--primary); font-weight: bold; margin: 0; font-size: 1.2rem;"><?= t('day_off') ?></p>
             <?php else: ?>
                 <?php 
                     $start12h = date("g:i A", strtotime($scheduleToday['start_time']));
@@ -199,7 +203,7 @@ if (!empty($_SESSION['employee_id'])) {
                 
                 <?php if ($lateAlert): ?>
                     <div style="background-color: #fee2e2; color: #b91c1c; padding: 8px; border-radius: 4px; font-weight: bold; margin-top: 10px; border: 1px solid #f87171;">
-                        ⚠️ NO HAZ REGISTRADO ENTRADA Y YA PASÓ TU HORA.
+                        <?= t('late_alert') ?>
                     </div>
                 <?php endif; ?>
             <?php endif; ?>
@@ -207,53 +211,53 @@ if (!empty($_SESSION['employee_id'])) {
 
         <div class="status-grid">
             <div class="status-card <?= e($statusClass) ?>">
-                <div class="status-label">Tu Estado Actual</div>
+                <div class="status-label"><?= t('your_current_status') ?></div>
                 <div class="status-value"><?= e($currentStatus) ?></div>
             </div>
             <div class="status-card">
-                <div class="status-label">Tu Último Registro</div>
+                <div class="status-label"><?= t('your_last_record') ?></div>
                 <div class="status-value"><?= e($lastRecord['record_time'] ?? '--:--') ?></div>
             </div>
         </div>
 
         <div class="card">
-            <h2 class="card-title">📝 Registrar asistencia</h2>
+            <h2 class="card-title"><?= t('record_attendance') ?></h2>
             <form method="post" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="photo">Foto evidencia *</label>
+                    <label for="photo"><?= t('photo_evidence') ?></label>
                     <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp" capture="environment" required>
-                    <div class="hint" style="margin-top:.5rem;">Puede tomar la foto desde el celular o subirla desde el equipo.</div>
+                    <div class="hint" style="margin-top:.5rem;"><?= t('photo_hint') ?></div>
                 </div>
 
                 <div class="card" style="background:#f8fafc; margin-top:1rem;">
-                    <strong>Ubicación del usuario</strong>
-                    <p class="hint" id="location_status" style="margin-top:.35rem;">Intentando obtener ubicación...</p>
+                    <strong><?= t('user_location') ?></strong>
+                    <p class="hint" id="location_status" style="margin-top:.35rem;"><?= t('getting_location') ?></p>
                     <input type="hidden" name="latitude" id="latitude">
                     <input type="hidden" name="longitude" id="longitude">
                     <input type="hidden" name="accuracy" id="accuracy">
                 </div>
 
                 <div class="grid-2" style="margin-top:1rem;">
-                    <button class="btn btn-success" type="submit" name="record_type" value="entrada">🌅 Registrar entrada</button>
-                    <button class="btn btn-danger" type="submit" name="record_type" value="salida">🌙 Registrar salida</button>
+                    <button class="btn btn-success" type="submit" name="record_type" value="entrada"><?= t('btn_clock_in') ?></button>
+                    <button class="btn btn-danger" type="submit" name="record_type" value="salida"><?= t('btn_clock_out') ?></button>
                 </div>
             </form>
         </div>
 
         <div class="card">
-            <h2 class="card-title">📋 Registros de hoy (General)</h2>
+            <h2 class="card-title"><?= t('today_records') ?></h2>
             <?php if (!$todayRecords): ?>
-                <p class="hint text-center">No hay registros para hoy.</p>
+                <p class="hint text-center"><?= t('no_records_today') ?></p>
             <?php else: ?>
                 <div class="table-container">
                     <table>
                         <thead>
                         <tr>
-                            <th>Empleado</th>
-                            <th>Tipo</th>
-                            <th>Hora</th>
-                            <th>Ubicación</th>
-                            <th>Foto</th>
+                            <th><?= t('employee') ?></th>
+                            <th><?= t('type') ?></th>
+                            <th><?= t('time') ?></th>
+                            <th><?= t('location') ?></th>
+                            <th><?= t('photo') ?></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -264,12 +268,12 @@ if (!empty($_SESSION['employee_id'])) {
                                 <td><?= e($record['record_time']) ?></td>
                                 <td>
                                     <?php if ($record['latitude'] && $record['longitude']): ?>
-                                        <a href="https://maps.google.com/?q=<?= e($record['latitude']) ?>,<?= e($record['longitude']) ?>" target="_blank">📍 Ver mapa</a>
+                                        <a href="https://maps.google.com/?q=<?= e($record['latitude']) ?>,<?= e($record['longitude']) ?>" target="_blank"><?= t('view_map') ?></a>
                                     <?php else: ?>
-                                        <span class="hint">Sin ubicación</span>
+                                        <span class="hint"><?= t('no_location') ?></span>
                                     <?php endif; ?>
                                 </td>
-                                <td><img src="<?= e($record['photo_path']) ?>" class="photo-thumb" alt="Foto"></td>
+                                <td><img src="<?= e($record['photo_path']) ?>" class="photo-thumb" alt="<?= t('photo') ?>"></td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>
@@ -280,8 +284,9 @@ if (!empty($_SESSION['employee_id'])) {
     <?php endif; ?>
 </div>
 <script>
-const appFormatterTime = new Intl.DateTimeFormat('es-ES', {timeZone: 'America/Denver', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
-const appFormatterDate = new Intl.DateTimeFormat('es-ES', {timeZone: 'America/Denver', weekday:'long', year:'numeric', month:'long', day:'numeric'});
+const locale = <?= json_encode(currentLang() === 'es' ? 'es-ES' : 'en-US') ?>;
+const appFormatterTime = new Intl.DateTimeFormat(locale, {timeZone: '<?= APP_TIMEZONE ?>', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+const appFormatterDate = new Intl.DateTimeFormat(locale, {timeZone: '<?= APP_TIMEZONE ?>', weekday:'long', year:'numeric', month:'long', day:'numeric'});
 function updateClock(){
     let clockEl = document.getElementById('clock');
     let dateEl = document.getElementById('date');
@@ -303,14 +308,14 @@ if (navigator.geolocation) {
         if(latEl) latEl.value = position.coords.latitude;
         if(lonEl) lonEl.value = position.coords.longitude;
         if(accEl) accEl.value = position.coords.accuracy;
-        if(locStatus) locStatus.textContent = 'Ubicación capturada correctamente.';
+        if(locStatus) locStatus.textContent = <?= json_encode(t('geo_captured')) ?>;
     }, function(error){
         let locStatus = document.getElementById('location_status');
-        if(locStatus) locStatus.textContent = 'No se pudo obtener la ubicación: ' + error.message;
+        if(locStatus) locStatus.textContent = <?= json_encode(t('geo_error')) ?> + error.message;
     });
 } else {
     let locStatus = document.getElementById('location_status');
-    if(locStatus) locStatus.textContent = 'El navegador no soporta geolocalización.';
+    if(locStatus) locStatus.textContent = <?= json_encode(t('geo_unsupported')) ?>;
 }
 </script>
 </body>

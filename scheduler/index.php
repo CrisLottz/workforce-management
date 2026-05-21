@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/lang.php';
 session_start();
 
 if (!isset($_SESSION['scheduler_email'])) {
@@ -37,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         $stmt->execute([$empName, $date, $start, $end, $isOff, $now]);
     }
-    $message = "Horarios semanales de $empName actualizados correctamente.";
+    $message = sprintf(t('schedule_updated'), $empName);
 }
 
 // Filtros de navegación
@@ -67,11 +68,11 @@ if ($selectedEmp) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?= currentLang() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Scheduler</title>
+    <title><?= t('scheduler_panel') ?></title>
     <link rel="stylesheet" href="../assets/style.css">
     <style>
         .schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 20px; }
@@ -83,10 +84,11 @@ if ($selectedEmp) {
 <body>
 <header>
     <div class="header-content">
-        <div class="logo"><span>📅</span><span>Panel Scheduler</span></div>
+        <div class="logo"><span>📅</span><span><?= t('scheduler_panel') ?></span></div>
         <div class="actions">
             <span class="role-badge">Scheduler: <?= e($_SESSION['scheduler_email']) ?></span>
-            <a class="logout-link" href="logout.php">Cerrar sesión</a>
+            <?= langSwitcher() ?>
+            <a class="logout-link" href="logout.php"><?= t('logout') ?></a>
         </div>
     </div>
 </header>
@@ -94,10 +96,10 @@ if ($selectedEmp) {
     <?php if ($message): ?><div class="alert alert-success"><?= e($message) ?></div><?php endif; ?>
 
     <div class="card" style="border-left: 4px solid var(--primary);">
-        <h2>1. Seleccionar Semana y Empleado</h2>
+        <h2><?= t('select_week_employee') ?></h2>
         <form method="get" class="filters" style="display: flex; gap: 15px; align-items: flex-end;">
             <div style="flex: 1;">
-                <label>Empleado</label>
+                <label><?= t('employee') ?></label>
                 <select name="employee_name" onchange="this.form.submit()">
                     <?php foreach ($employees as $emp): ?>
                         <option value="<?= e($emp) ?>" <?= $selectedEmp === $emp ? 'selected' : '' ?>><?= e($emp) ?></option>
@@ -105,21 +107,21 @@ if ($selectedEmp) {
                 </select>
             </div>
             <div style="flex: 1;">
-                <label>Cualquier fecha de la semana a gestionar</label>
+                <label><?= t('any_date_in_week') ?></label>
                 <input type="date" name="week_date" value="<?= e($selectedDate) ?>" onchange="this.form.submit()">
             </div>
         </form>
     </div>
 
     <div class="card">
-        <h2>2. Asignar Horarios (Semana del <?= e($sunday) ?>)</h2>
+        <h2><?= sprintf(t('assign_schedules'), e($sunday)) ?></h2>
         <form method="post">
             <input type="hidden" name="action" value="save_schedule">
             <input type="hidden" name="employee_name" value="<?= e($selectedEmp) ?>">
             
             <div class="schedule-grid">
                 <?php 
-                $days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                $days = [t('day_sunday'), t('day_monday'), t('day_tuesday'), t('day_wednesday'), t('day_thursday'), t('day_friday'), t('day_saturday')];
                 for ($i = 0; $i < 7; $i++): 
                     $currentDate = date('Y-m-d', strtotime("$sunday +$i days"));
                     $data = $existingSchedules[$currentDate] ?? null;
@@ -131,21 +133,21 @@ if ($selectedEmp) {
                     <h4><?= $days[$i] ?><br><small style="color:gray;"><?= $currentDate ?></small></h4>
                     <input type="hidden" name="dates[<?= $i ?>]" value="<?= $currentDate ?>">
                     <div class="form-group" style="margin-bottom: 5px;">
-                        <label style="font-size: 0.8rem;">Entrada</label>
+                        <label style="font-size: 0.8rem;"><?= t('clock_in') ?></label>
                         <input type="time" name="starts[<?= $i ?>]" value="<?= e($startVal) ?>" <?= $isOff ? 'disabled' : '' ?>>
                     </div>
                     <div class="form-group" style="margin-bottom: 5px;">
-                        <label style="font-size: 0.8rem;">Salida</label>
+                        <label style="font-size: 0.8rem;"><?= t('clock_out') ?></label>
                         <input type="time" name="ends[<?= $i ?>]" value="<?= e($endVal) ?>" <?= $isOff ? 'disabled' : '' ?>>
                     </div>
                     <div class="off-check">
-                        <label><input type="checkbox" class="off-toggle" name="offs[<?= $i ?>]" value="1" <?= $isOff ? 'checked' : '' ?>> Día OFF</label>
+                        <label><input type="checkbox" class="off-toggle" name="offs[<?= $i ?>]" value="1" <?= $isOff ? 'checked' : '' ?>> <?= t('day_off') ?></label>
                     </div>
                 </div>
                 <?php endfor; ?>
             </div>
             <div style="margin-top: 20px; text-align: right;">
-                <button type="submit" class="btn btn-success" style="padding: 10px 30px;">💾 Guardar Horario Semanal</button>
+                <button type="submit" class="btn btn-success" style="padding: 10px 30px;">💾 <?= t('save_weekly_schedule') ?></button>
             </div>
         </form>
     </div>
