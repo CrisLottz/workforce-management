@@ -1,3 +1,5 @@
+<div align="center">
+  
 # 🏢 Workforce Management
 
 ### Attendance, Scheduling & Workforce Control Platform
